@@ -18,7 +18,7 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
       setFileError(null);
       onImageUpload(file);
     } else if (file) {
-      setFileError('Formato não suportado. Use JPG, PNG ou WEBP.');
+      setFileError('Unsupported format. Use JPG, PNG, or WEBP.');
     }
   };
 
@@ -40,15 +40,15 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
         </div>
 
         <div>
-          <h3>Envio imagem raio-x</h3>
+          <h3>X-ray image upload</h3>
           <p className='text-muted-foreground mt-1'>
-            Seleciona um cefalograma de alta qualidade
+            Select a high-quality cephalogram
           </p>
         </div>
 
         {uploadedImage && (
           <div className='text-sm text-primary'>
-            ✓ Envio de imagem bem-sucedido!
+            ✓ Image uploaded successfully!
           </div>
         )}
 
@@ -57,7 +57,7 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
           variant={uploadedImage ? "secondary" : "default"}
           className='w-full'
         >
-          {uploadedImage ? "Mudar imagem" : "Selecionar imagem"}
+          {uploadedImage ? "Change image" : "Select image"}
         </Button>
 
         {fileError && (
@@ -73,7 +73,7 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
         />
 
         <p className='text-xs text-muted-foreground'>
-          Formatos suportados: JPG, PNG, WEBP
+          Supported formats: JPG, PNG, WEBP
         </p>
       </div>
     </Card>

@@ -47,8 +47,8 @@ CephaloAI is a single-page application that lets clinicians upload a lateral cep
 
 ```
 ┌─────────────┐     multipart/form-data      ┌──────────────────────┐
-│ ImageUpload │ ─────────────────────────── ▶ │ POST /processar-     │
-│  (file)     │                               │       imagem         │
+│ ImageUpload │ ─────────────────────────── ▶ │ POST /process-image  │
+│  (file)     │                               │                      │
 └─────────────┘                               └──────────┬───────────┘
                                                          │
                                             { image_with_overlay_path,
@@ -56,12 +56,12 @@ CephaloAI is a single-page application that lets clinicians upload a lateral cep
                                                          │
                                                          ▼
                                               ┌──────────────────────┐
-                                              │ POST /diagnostico    │
+                                              │ POST /diagnosis      │
                                               │ (JSON angles)        │
                                               └──────────┬───────────┘
                                                          │
-                                            { diagnostico: string,
-                                              recomendacoes: string[] }
+                                            { diagnosis: string,
+                                              recommendations: string[] }
                                                          │
                                                          ▼
                                               ┌──────────────────────┐
@@ -105,7 +105,7 @@ CephaloAI is a single-page application that lets clinicians upload a lateral cep
 
 ## API Reference
 
-### `POST /processar-imagem`
+### `POST /process-image`
 
 Upload a lateral cephalogram for landmark detection and angle computation.
 
@@ -133,13 +133,13 @@ file: <image file>
 
 ---
 
-### `GET /download-imagem/{filename}`
+### `GET /download-image/{filename}`
 
-Download the processed overlay image. The filename is extracted from `image_with_overlay_path` in the `/processar-imagem` response.
+Download the processed overlay image. The filename is extracted from `image_with_overlay_path` in the `/process-image` response.
 
 ---
 
-### `POST /diagnostico`
+### `POST /diagnosis`
 
 Generate an AI diagnosis from the computed angle measurements.
 
@@ -160,8 +160,8 @@ Generate an AI diagnosis from the computed angle measurements.
 **Response:**
 ```json
 {
-  "diagnostico": "The patient presents a Class I skeletal relationship with normal facial proportions...",
-  "recomendacoes": [
+  "diagnosis": "The patient presents a Class I skeletal relationship with normal facial proportions...",
+  "recommendations": [
     "Schedule follow-up in 6 months to monitor growth",
     "Evaluate occlusal relationships clinically"
   ]
@@ -258,7 +258,7 @@ src/
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_API_URL` | Yes | Base URL for the image processing API (`/processar-imagem`, `/download-imagem`) |
-| `VITE_DIAG_URL` | Yes | Base URL for the diagnostic AI API (`/diagnostico`) |
+| `VITE_API_URL` | Yes | Base URL for the image processing API (`/process-image`, `/download-image`) |
+| `VITE_DIAG_URL` | Yes | Base URL for the diagnostic AI API (`/diagnosis`) |
 
 Both variables default to `localhost` in development (`5000` and `3001` respectively) if not set.
