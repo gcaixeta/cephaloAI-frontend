@@ -1,51 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { ImageUpload } from './components/ImageUpload';
 import { ImageDisplay } from './components/ImageDisplay';
 import { DiagnosticPanel } from './components/DiagnosticPanel';
 import { Brain, FileText, Zap } from 'lucide-react';
-import './App.css'
+import type { Angles } from './types/angles';
+import { textSuccess, textFailure } from './constants/diagnostics';
 
-interface AngleValue {
-  class: string;
-  value: number;
-}
+export type { Angles } from './types/angles';
 
-export interface Angles {
-  ANB: AngleValue;
-  APDI: AngleValue;
-  FHI: AngleValue;
-  FMA: AngleValue;
-  MW: AngleValue;
-  ODI: AngleValue;
-  SNA: AngleValue;
-  SNB: AngleValue;
-}
+const API_PREFIX = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+const DIAG_PREFIX = import.meta.env.VITE_DIAG_URL ?? "http://localhost:3001";
 
 function App() {
   const [originalImage, setOriginalImage] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analyzedImage, setAnalyzedImage] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showResults, setShowResults] = useState(false)
+  const [isDiagnosing, setIsDiagnosing] = useState(false)
   const [angles, setAngles] = useState<Angles | null>(null);
   const [diagnosis, setDiagnosis] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!originalImage) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(originalImage);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [originalImage]);
 
   const handleImageUpload = (file: File) => {
-    setOriginalImage(file); // salva o File para enviar
-    setPreviewUrl(URL.createObjectURL(file)); // salva a URL só para exibir
+    setOriginalImage(file);
     setAnalyzedImage(null);
-    setShowResults(false);
+    setError(null);
   };
-
-  const API_PREFIX = "/api";
 
   const handleGenerateAnalysis = async () => {
     if (!originalImage) return;
 
     setIsAnalyzing(true);
+    setError(null);
 
     try {
       const formData = new FormData();
@@ -57,7 +53,8 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("Erro na API");
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error ?? "Erro na API");
       }
 
       const data = await response.json();
@@ -65,49 +62,44 @@ function App() {
       const filename = data.image_with_overlay_path.replace(/^.*[\\/]/, "");
       const imageUrl = `${API_PREFIX}/download-imagem/${filename}`;
       setAnalyzedImage(imageUrl);
-      setShowResults(true);
       setAngles(data.angles);
-      console.log("Chamando diagnosis");
-      handleSendAnglesToAi(data.angles);
 
-    } catch (error) {
-      console.error("Erro:", error);
+      await handleSendAnglesToAi(data.angles);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido na análise");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleSendAnglesToAi = async (angles: any) => {
-    if (!angles) {
-      console.log("Error sending angles to ai. Angles might be null.");
-      return;
+  const handleSendAnglesToAi = async (angles: Angles) => {
+    if (!angles) return;
+
+    setIsDiagnosing(true);
+    try {
+      const response = await fetch(`${DIAG_PREFIX}/diagnostico`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(angles),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error ?? "Erro na API de diagnóstico");
+      }
+
+      const data = await response.json();
+      setDiagnosis(data.diagnostico);
+      setRecommendations(data.recomendacoes);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro desconhecido no diagnóstico");
+    } finally {
+      setIsDiagnosing(false);
     }
-    console.log("Angulos: " + angles);
-    console.log("Antes de chamar api de diagnostico");
-
-    console.log("Enviando: ", JSON.stringify(angles, null, 2));
-    const response = await fetch("/diagnostico", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify(angles),
-    });
-    console.log("Chamou api de diagnostico");
-
-    if (!response.ok) {
-      throw new Error("Erro na api de diagnostico");
-    }
-
-    const data = await response.json();
-    setDiagnosis(data.diagnostico);
-    console.log("Diagnostico: ", data.diagnostico);
-    console.log("Recomendacoes: " + data.recomendacoes);
-    setRecommendations(data.recomendacoes);
   }
-
-  const textSuccess = 'text-green-600 ';
-  const textFailure = 'text-gray-400';
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,7 +107,7 @@ function App() {
         <div className='border-b bg-card'>
           <div className='flex items-center gap-3'>
             <div>
-              <h1 className='text-3x1 font-bold'>CephaloAI</h1>
+              <h1 className='text-3xl font-bold'>CephaloAI</h1>
               <p className='text-sm text-muted-foreground'>
                 Análise automatizadas de cefalogramas
               </p>
@@ -124,6 +116,11 @@ function App() {
         </div>
       </header>
       <main className='container mx-auto px-6 py-8'>
+        {error && (
+          <div className='mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700'>
+            {error}
+          </div>
+        )}
         <div className='grid grid-cols-1 xl:grid-cols-3 gap-8'>
           {/* Left column - Upload and Controls*/}
           <div className='space-y-6'>
@@ -141,7 +138,7 @@ function App() {
 
                 <Button
                   onClick={handleGenerateAnalysis}
-                  disabled={!originalImage || isAnalyzing}
+                  disabled={!originalImage || isAnalyzing || isDiagnosing}
                   className='w-full'
                   size='lg'
                 >
@@ -149,6 +146,11 @@ function App() {
                     <>
                       <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2' />
                       Analisando...
+                    </>
+                  ) : isDiagnosing ? (
+                    <>
+                      <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2' />
+                      Gerando diagnóstico...
                     </>
                   ) : (
                     <>
@@ -180,8 +182,8 @@ function App() {
                 </div>
                 <div className='flex items-center justify-between'>
                   <span>Detecção de pontos</span>
-                  <span className={showResults ? textSuccess : textFailure}>
-                    {isAnalyzing ? "Processando..." : showResults ? "✓ Concluido" : "Pendente"}
+                  <span className={analyzedImage !== null ? textSuccess : textFailure}>
+                    {isAnalyzing ? "Processando..." : analyzedImage !== null ? "✓ Concluido" : "Pendente"}
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>
@@ -193,7 +195,7 @@ function App() {
                 <div className='flex items-center justify-between'>
                   <span>Diagnóstico da IA</span>
                   <span className={diagnosis ? textSuccess : textFailure}>
-                    {diagnosis ? "✓ Concluido" : "Pendente"}
+                    {isDiagnosing ? "Processando..." : diagnosis ? "✓ Concluido" : "Pendente"}
                   </span>
                 </div>
               </div>
@@ -209,7 +211,7 @@ function App() {
               analyzedImage={analyzedImage}
             />
 
-            {showResults && recommendations && (
+            {analyzedImage !== null && recommendations && (
               <DiagnosticPanel
                 angles={angles}
                 isLoading={isAnalyzing}
