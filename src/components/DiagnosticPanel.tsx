@@ -1,15 +1,10 @@
+import { useMemo } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
-import type { Angles } from '../App';
-
-interface DiagnosticResult {
-  measurement: string;
-  value: string;
-  normalRange: string;
-  status: 'normal' | 'abnormal' | 'borderline';
-}
+import type { Angles } from '../types/angles';
+import { normalRanges, STATUS_COLORS } from '../constants/diagnostics';
 
 interface DiagnosticPanelProps {
   angles: Angles | null;
@@ -20,14 +15,17 @@ interface DiagnosticPanelProps {
 }
 
 export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles }: DiagnosticPanelProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case '1': return 'bg-green-100 text-green-800 border-green-200';      // normal
-      case '2': return 'bg-yellow-100 text-yellow-800 border-yellow-200';   // ruim
-      case '3': return 'bg-red-100 text-red-800 border-red-200';            // péssimo
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  // Transforma angles em array para mapear
+  const displayResults = useMemo(() => angles
+    ? Object.entries(angles).map(([key, angle]) => ({
+      measurement: key,
+      value: angle.value.toFixed(2),
+      normalRange: normalRanges[key] || "-",
+      status: angle.class, // já vem como '1', '2' ou '3'
+    }))
+    : [], [angles]);
+
+  const displayDiagnosis = diagnosis || "Com base na análise cefalométrica, o paciente apresenta uma relação esquelética de Classe I com proporções faciais normais. Todas as medidas angulares estão dentro dos limites normais, indicando crescimento e desenvolvimento craniofacial equilibrados.";
 
   if (isLoading) {
     return (
@@ -45,30 +43,6 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
     );
   }
 
-  // Exemplo de ranges normais para exibição (ajuste conforme necessário)
-  const normalRanges: Record<string, string> = {
-    ANB: "2° – 4°",
-    APDI: "81° – 87°",
-    FHI: "0.65 – 0.75",
-    FMA: "22° – 28°",
-    MW: "25 – 30 mm",
-    ODI: "72° – 88°",
-    SNA: "82° ± 2°",
-    SNB: "80° ± 2°",
-  };
-
-  // Transforma angles em array para mapear
-  const displayResults = angles
-    ? Object.entries(angles).map(([key, angle]) => ({
-      measurement: key,
-      value: angle.value.toFixed(2),
-      normalRange: normalRanges[key] || "-",
-      status: angle.class, // já vem como '1', '2' ou '3'
-    }))
-    : [];
-
-  const displayDiagnosis = diagnosis || "Com base na análise cefalométrica, o paciente apresenta uma relação esquelética de Classe I com proporções faciais normais. Todas as medidas angulares estão dentro dos limites normais, indicando crescimento e desenvolvimento craniofacial equilibrados.";
-
   return (
     <Card className="p-6">
       <h3 className="mb-4">Resultados da análise</h3>
@@ -81,13 +55,13 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
           <div>
             <h4 className="mb-3">Medidas cefalométricas</h4>
             <div className="space-y-3">
-              {displayResults.map((result, index) => (
-                <div key={index} className="border rounded-lg p-3">
+              {displayResults.map((result) => (
+                <div key={result.measurement} className="border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium">{result.measurement}</span>
                     <Badge
                       variant="outline"
-                      className={getStatusColor(result.status)}
+                      className={STATUS_COLORS[result.status] ?? 'bg-gray-100 text-gray-800 border-gray-200'}
                     >
                       {result.status === '1'
                         ? 'Normal'
@@ -131,7 +105,7 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
             <ul className="text-sm space-y-2 text-muted-foreground">
               {Array.isArray(recommendations) && recommendations.length > 0 ? (
                 recommendations.map((rec, idx) => (
-                  <li key={idx}>• {rec}</li>
+                  <li key={`rec-${idx}`}>• {rec}</li>
                 ))
               ) : (
                 <>

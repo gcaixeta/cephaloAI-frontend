@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Button } from '../components/ui/button';
+import React, { useRef, useState } from 'react';
+import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 
@@ -10,11 +10,15 @@ interface ImageUploadProps {
 
 export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
+      setFileError(null);
       onImageUpload(file);
+    } else if (file) {
+      setFileError('Formato não suportado. Use JPG, PNG ou WEBP.');
     }
   };
 
@@ -56,6 +60,10 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
           {uploadedImage ? "Mudar imagem" : "Selecionar imagem"}
         </Button>
 
+        {fileError && (
+          <p className='text-xs text-red-600'>{fileError}</p>
+        )}
+
         <input
           ref={fileInputRef}
           type='file'
@@ -65,7 +73,7 @@ export function ImageUpload({ onImageUpload, uploadedImage }: ImageUploadProps) 
         />
 
         <p className='text-xs text-muted-foreground'>
-          Formatos suportados:
+          Formatos suportados: JPG, PNG, WEBP
         </p>
       </div>
     </Card>
