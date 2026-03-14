@@ -10,27 +10,27 @@ interface DiagnosticPanelProps {
   angles: Angles | null;
   isLoading: boolean;
   diagnosis: string | null;
-  // deve ser um array de strings ou null (coerente com App.tsx)
+  // must be a string array or null (consistent with App.tsx)
   recommendations: string[] | null;
 }
 
 export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles }: DiagnosticPanelProps) {
-  // Transforma angles em array para mapear
+  // Transform angles object into array for mapping
   const displayResults = useMemo(() => angles
     ? Object.entries(angles).map(([key, angle]) => ({
       measurement: key,
       value: angle.value.toFixed(2),
       normalRange: normalRanges[key] || "-",
-      status: angle.class, // já vem como '1', '2' ou '3'
+      status: angle.class, // arrives as '1', '2', or '3'
     }))
     : [], [angles]);
 
-  const displayDiagnosis = diagnosis || "Com base na análise cefalométrica, o paciente apresenta uma relação esquelética de Classe I com proporções faciais normais. Todas as medidas angulares estão dentro dos limites normais, indicando crescimento e desenvolvimento craniofacial equilibrados.";
+  const displayDiagnosis = diagnosis || "Based on the cephalometric analysis, the patient presents a Class I skeletal relationship with normal facial proportions. All angular measurements are within normal limits, indicating balanced craniofacial growth and development.";
 
   if (isLoading) {
     return (
       <Card className="p-6">
-        <h3 className="mb-4">Resultados da análise</h3>
+        <h3 className="mb-4">Analysis results</h3>
         <div className="space-y-4">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
@@ -45,15 +45,15 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
 
   return (
     <Card className="p-6">
-      <h3 className="mb-4">Resultados da análise</h3>
+      <h3 className="mb-4">Analysis results</h3>
 
-    {/* Em mobile permitimos que o painel cresça com o conteúdo (sem max-h) para ficar consistente
-     com os Cards de imagem; em telas grandes alinhamos com a altura das imagens (lg:h-[500px]) */}
+    {/* On mobile let the panel grow with content (no max-h) to stay consistent with image cards;
+     on large screens align with image height (lg:h-[500px]) */}
     <ScrollArea className="h-auto lg:h-[500px] pr-4">
         <div className="space-y-6">
           {/* Measurements */}
           <div>
-            <h4 className="mb-3">Medidas cefalométricas</h4>
+            <h4 className="mb-3">Cephalometric measurements</h4>
             <div className="space-y-3">
               {displayResults.map((result) => (
                 <div key={result.measurement} className="border rounded-lg p-3">
@@ -66,15 +66,15 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
                       {result.status === '1'
                         ? 'Normal'
                         : result.status === '2'
-                          ? 'Ruim'
+                          ? 'Poor'
                           : result.status === '3'
-                            ? 'Crítico'
-                            : 'Desconhecido'}
+                            ? 'Critical'
+                            : 'Unknown'}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                     <div>
-                      <span className="font-medium">Medida: </span>
+                      <span className="font-medium">Value: </span>
                       <span>{result.value}</span>
                     </div>
                     <div>
@@ -91,7 +91,7 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
 
           {/* AI Diagnosis */}
           <div>
-            <h4 className="mb-3">Sumário do diagnóstico</h4>
+            <h4 className="mb-3">Diagnosis summary</h4>
             <Card className="p-4 bg-muted/50">
               <p className="text-sm leading-relaxed">
                 {displayDiagnosis}
@@ -101,7 +101,7 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
 
           {/* Recommendations */}
           <div>
-            <h4 className="mb-3">Recomendações clínicas</h4>
+            <h4 className="mb-3">Clinical recommendations</h4>
             <ul className="text-sm space-y-2 text-muted-foreground">
               {Array.isArray(recommendations) && recommendations.length > 0 ? (
                 recommendations.map((rec, idx) => (
@@ -109,10 +109,10 @@ export function DiagnosticPanel({ isLoading, recommendations, diagnosis, angles 
                 ))
               ) : (
                 <>
-                  <li>• Continuar com consultas regulares</li>
-                  <li>• Considerar avaliações semestrais para acompanhar crescimento</li>
-                  <li>• Monitorar quaisquer alterações em simetria facial.</li>
-                  <li>• Avaliar relações de oclusões clinicamente.</li>
+                  <li>• Continue with regular check-ups</li>
+                  <li>• Consider biannual evaluations to monitor growth</li>
+                  <li>• Monitor any changes in facial symmetry.</li>
+                  <li>• Clinically evaluate occlusal relationships.</li>
                 </>
               )}
             </ul>

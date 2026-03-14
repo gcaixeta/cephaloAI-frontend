@@ -47,27 +47,27 @@ function App() {
       const formData = new FormData();
       formData.append("file", originalImage);
 
-      const response = await fetch(`${API_PREFIX}/processar-imagem`, {
+      const response = await fetch(`${API_PREFIX}/process-image`, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error ?? "Erro na API");
+        throw new Error(body.error ?? "API error");
       }
 
       const data = await response.json();
 
       const filename = data.image_with_overlay_path.replace(/^.*[\\/]/, "");
-      const imageUrl = `${API_PREFIX}/download-imagem/${filename}`;
+      const imageUrl = `${API_PREFIX}/download-image/${filename}`;
       setAnalyzedImage(imageUrl);
       setAngles(data.angles);
 
       await handleSendAnglesToAi(data.angles);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido na análise");
+      setError(err instanceof Error ? err.message : "Unknown error during analysis");
     } finally {
       setIsAnalyzing(false);
     }
@@ -78,7 +78,7 @@ function App() {
 
     setIsDiagnosing(true);
     try {
-      const response = await fetch(`${DIAG_PREFIX}/diagnostico`, {
+      const response = await fetch(`${DIAG_PREFIX}/diagnosis`, {
         method: "POST",
         headers: {
           "Content-type": "application/json",
@@ -88,14 +88,14 @@ function App() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error ?? "Erro na API de diagnóstico");
+        throw new Error(body.error ?? "Diagnosis API error");
       }
 
       const data = await response.json();
-      setDiagnosis(data.diagnostico);
-      setRecommendations(data.recomendacoes);
+      setDiagnosis(data.diagnosis);
+      setRecommendations(data.recommendations);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido no diagnóstico");
+      setError(err instanceof Error ? err.message : "Unknown error during diagnosis");
     } finally {
       setIsDiagnosing(false);
     }
@@ -109,7 +109,7 @@ function App() {
             <div>
               <h1 className='text-3xl font-bold'>CephaloAI</h1>
               <p className='text-sm text-muted-foreground'>
-                Análise automatizadas de cefalogramas
+                Automated cephalogram analysis
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ function App() {
               <div className='space-y-4'>
                 <div className='flex items-center gap-2'>
                   <Zap className='w-5 h-5 text-primary' />
-                  <h3>Controle de análise</h3>
+                  <h3>Analysis controls</h3>
                 </div>
 
                 <Button
@@ -145,25 +145,25 @@ function App() {
                   {isAnalyzing ? (
                     <>
                       <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2' />
-                      Analisando...
+                      Analyzing...
                     </>
                   ) : isDiagnosing ? (
                     <>
                       <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2' />
-                      Gerando diagnóstico...
+                      Generating diagnosis...
                     </>
                   ) : (
                     <>
                       <Brain className='w-4 h-4 mr-2' />
-                      Gerar análise
+                      Generate analysis
                     </>
                   )}
                 </Button>
 
                 <div className='text-xs text-muted-foreground space-y-1'>
-                  <p>• Carregue um raio x lateral </p>
-                  <p>• Clique em "Gerar análise" para processar </p>
-                  <p>• Veja os resultados e as medições </p>
+                  <p>• Upload a lateral X-ray</p>
+                  <p>• Click "Generate analysis" to process</p>
+                  <p>• View results and measurements</p>
                 </div>
               </div>
             </Card>
@@ -171,31 +171,31 @@ function App() {
             <Card className='p-6'>
               <div className='flex items-center gap-2 mb-3'>
                 <FileText className='w-5 h-5 text-primary' />
-                <h3>Status da análise</h3>
+                <h3>Analysis status</h3>
               </div>
               <div className='space-y-2 text-sm'>
                 <div className='flex items-center justify-between'>
-                  <span>Upload da imagem</span>
+                  <span>Image upload</span>
                   <span className={originalImage ? textSuccess : textFailure}>
-                    {originalImage ? "✓ Concluido" : "Pendente"}
+                    {originalImage ? "✓ Done" : "Pending"}
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <span>Detecção de pontos</span>
+                  <span>Landmark detection</span>
                   <span className={analyzedImage !== null ? textSuccess : textFailure}>
-                    {isAnalyzing ? "Processando..." : analyzedImage !== null ? "✓ Concluido" : "Pendente"}
+                    {isAnalyzing ? "Processing..." : analyzedImage !== null ? "✓ Done" : "Pending"}
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <span>Análise das medições</span>
+                  <span>Measurements analysis</span>
                   <span className={angles ? textSuccess : textFailure}>
-                    {angles ? "✓ Concluido" : "Pendente"}
+                    {angles ? "✓ Done" : "Pending"}
                   </span>
                 </div>
                 <div className='flex items-center justify-between'>
-                  <span>Diagnóstico da IA</span>
+                  <span>AI diagnosis</span>
                   <span className={diagnosis ? textSuccess : textFailure}>
-                    {isDiagnosing ? "Processando..." : diagnosis ? "✓ Concluido" : "Pendente"}
+                    {isDiagnosing ? "Processing..." : diagnosis ? "✓ Done" : "Pending"}
                   </span>
                 </div>
               </div>
@@ -204,7 +204,7 @@ function App() {
 
 
           {/* Right column - Images and Results */}
-          {/* min-h-0 permite que filhos com h-full/min-height encolham corretamente em layouts flex/grid */}
+          {/* min-h-0 allows children with h-full/min-height to shrink correctly in flex/grid layouts */}
           <div className='xl:col-span-2 space-y-8 min-h-0'>
             <ImageDisplay
               originalImage={previewUrl}

@@ -8,12 +8,12 @@ interface ImageDisplayProps {
 
 export function ImageDisplay({ originalImage, analyzedImage }: ImageDisplayProps) {
   return (
-    // tornar a altura responsiva: evitar forçar 500px em telas pequenas
+    // make height responsive: avoid forcing 500px on small screens
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[500px] h-auto">
       {/* Original Image */}
       <Card className="p-4 bg-black">
         <div className="mb-3">
-          <h3 className="text-white">Imagem original</h3>
+          <h3 className="text-white">Original image</h3>
         </div>
   <div className="h-full min-h-0 bg-black rounded border border-gray-700 flex items-center justify-center relative">
           {originalImage ? (
@@ -29,7 +29,7 @@ export function ImageDisplay({ originalImage, analyzedImage }: ImageDisplayProps
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p>Carregue uma imagem para iniciar a análise</p>
+              <p>Upload an image to start the analysis</p>
             </div>
           )}
         </div>
@@ -38,7 +38,7 @@ export function ImageDisplay({ originalImage, analyzedImage }: ImageDisplayProps
       {/* Analyzed Image with Points */}
       <Card className="p-4 bg-black">
         <div className="mb-3">
-          <h3 className="text-white">Imagem resultante</h3>
+          <h3 className="text-white">Analyzed image</h3>
         </div>
   <div className="h-full min-h-0 bg-black rounded border border-gray-700 flex items-center justify-center relative">
           {analyzedImage ? (
@@ -54,7 +54,7 @@ export function ImageDisplay({ originalImage, analyzedImage }: ImageDisplayProps
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <p>Análise aparecerá aqui</p>
+              <p>Analysis will appear here</p>
             </div>
           )}
         </div>
